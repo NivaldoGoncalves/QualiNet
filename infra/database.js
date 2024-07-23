@@ -1,11 +1,10 @@
 import { Client } from "pg";
 
 async function query(queryOject) {
-
   let client;
 
   try {
-    client = await getNewClient(); 
+    client = await getNewClient();
     const result = await client.query(queryOject);
     return result;
   } catch (error) {
@@ -17,7 +16,8 @@ async function query(queryOject) {
 }
 
 export default {
-  query: query,
+  query,
+  getNewClient,
 };
 
 async function getNewClient() {
@@ -33,11 +33,12 @@ async function getNewClient() {
   await client.connect();
   return client;
 
-function getSSLValues() {
-  if (process.env.POSTEGRES_CA) {
-    return {
-      rejectUnauthorized: false,
-    };
+  function getSSLValues() {
+    if (process.env.POSTEGRES_CA) {
+      return {
+        rejectUnauthorized: false,
+      };
+    }
+    return false;
   }
-  return false;
 }
