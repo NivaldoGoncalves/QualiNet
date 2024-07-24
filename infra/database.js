@@ -29,9 +29,9 @@ async function getNewClient() {
     password: process.env.POSTGRES_PASSWORD,
     ssl: getSSLValues(),
   });
+  await client.connect();
+  return client;
 }
-await client.connect();
-return client;
 
 function getSSLValues() {
   if (process.env.POSTEGRES_CA) {
