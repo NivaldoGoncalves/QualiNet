@@ -39,5 +39,5 @@ function getSSLValues() {
       rejectUnauthorized: true,
     };
   }
-  return false;
+  return true;
 }
