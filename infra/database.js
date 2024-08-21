@@ -36,8 +36,8 @@ async function getNewClient() {
 function getSSLValues() {
   if (process.env.POSTGRES_CA) {
     return {
-      rejectUnauthorized: false,
+      rejectUnauthorized: true,
     };
   }
-  return false;
+  return true;
 }
