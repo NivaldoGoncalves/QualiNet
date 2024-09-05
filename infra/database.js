@@ -34,10 +34,10 @@ async function getNewClient() {
 }
 
 function getSSLValues() {
-  if (process.env.POSTGRES_CA) {
+  if (process.env.POSTEGRES_CA) {
     return {
-      rejectUnauthorized: true,
+      rejectUnauthorized: false,
     };
   }
-  return true;
+  return false;
 }
