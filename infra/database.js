@@ -1,4 +1,4 @@
-import { Client } from "pg";
+/*import { Client } from "pg";
 
 async function query(queryOject) {
   let client;
@@ -41,8 +41,8 @@ function getSSLValues() {
   }
   return false;
 }
-
-/*import { Client } from "pg";
+*/
+import { Client } from "pg";
 
 async function query(queryObject) {
   let client;
@@ -87,4 +87,4 @@ function getSSLValues() {
   }
 
   return process.env.NODE_ENV === "production" ? true : false;
-}*/
+}
