@@ -74,7 +74,7 @@ async function getNewConnection() {
   const connection = await oracledb.getConnection({
     user: process.env.ORACLE_USER,
     password: process.env.ORACLE_PASSWORD,
-    connectString: `${process.env.ORACLE_HOST}:${process.env.ORACLE_PORT}/${process.env.ORACLE_SERVICE}`,
+    connectString: `${process.env.ORACLE_HOST}:${process.env.ORACLE_PORT}/${process.env.ORACLE_DB}`,
   });
 
   return connection;
