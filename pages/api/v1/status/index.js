@@ -38,36 +38,50 @@ import database from "infra/database.js";
 async function status(request, response) {
   const updateAt = new Date().toISOString();
 
-  // Consulta para obter a versão do banco de dados Oracle
-  const databaseVersionResult = await database.query({
-    sql: "SELECT * FROM v$version WHERE banner LIKE 'Oracle%';",
-  });
-  const databaseVersionValue = databaseVersionResult.rows[0].BANNER;
+  try {
+    // Executar todas as consultas em paralelo usando Promise.all
+    const [
+      databaseVersionResult,
+      databaseMaxConnectionsResult,
+      databaseOpenedConnectionsResult,
+    ] = await Promise.all([
+      database.query({
+        sql: "SELECT * FROM v$version WHERE banner LIKE 'Oracle%';",
+      }),
+      database.query({
+        sql: `SELECT value FROM v$parameter WHERE name = 'sessions';`,
+      }),
+      database.query({
+        sql: "SELECT COUNT(*) AS count FROM v$session WHERE status = 'ACTIVE';",
+      }),
+    ]);
 
-  // Consulta para obter o máximo de conexões permitidas no Oracle (limite de sessões)
-  const databaseMaxConnectionsResult = await database.query({
-    sql: `SELECT value FROM v$parameter WHERE name = 'sessions';`,
-  });
-  const databaseMaxConnectionsValue =
-    databaseMaxConnectionsResult.rows[0].VALUE;
+    // Extrair os valores dos resultados das consultas
+    const databaseVersionValue = databaseVersionResult.rows[0].BANNER;
+    const databaseMaxConnectionsValue = parseInt(
+      databaseMaxConnectionsResult.rows[0].VALUE,
+    );
+    const databaseOpenedConnectionsValue = parseInt(
+      databaseOpenedConnectionsResult.rows[0].COUNT,
+    );
 
-  // Consulta para contar o número de conexões ativas
-  const databaseOpenedConnectionsResult = await database.query({
-    sql: "SELECT COUNT(*) AS count FROM v$session WHERE status = 'ACTIVE';",
-  });
-  const databaseOpenedConnectionsValue =
-    databaseOpenedConnectionsResult.rows[0].COUNT;
-
-  response.status(200).json({
-    update_at: updateAt,
-    dependecies: {
-      database: {
-        version: databaseVersionValue,
-        max_connections: parseInt(databaseMaxConnectionsValue),
-        opened_connections: databaseOpenedConnectionsValue,
+    // Enviar a resposta JSON
+    response.status(200).json({
+      update_at: updateAt,
+      dependecies: {
+        database: {
+          version: databaseVersionValue,
+          max_connections: databaseMaxConnectionsValue,
+          opened_connections: databaseOpenedConnectionsValue,
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    console.error("Erro ao buscar status do banco de dados:", error);
+    response
+      .status(500)
+      .json({ error: "Erro ao buscar status do banco de dados" });
+  }
 }
 
 export default status;
