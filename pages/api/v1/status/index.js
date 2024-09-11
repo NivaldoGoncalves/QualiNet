@@ -1,4 +1,4 @@
-import database from "infra/database.js";
+/*import database from "infra/database.js";
 
 async function status(request, response) {
   const updateAt = new Date().toISOString();
@@ -30,6 +30,58 @@ async function status(request, response) {
       },
     },
   });
+}
+
+export default status;*/
+import database from "infra/database.js";
+
+async function status(request, response) {
+  const updateAt = new Date().toISOString();
+
+  try {
+    // Executar todas as consultas em paralelo usando Promise.all
+    const [
+      databaseVersionResult,
+      databaseMaxConnectionsResult,
+      databaseOpenedConnectionsResult,
+    ] = await Promise.all([
+      database.query({
+        sql: "SELECT * FROM v$version WHERE banner LIKE 'Oracle%';",
+      }),
+      database.query({
+        sql: `SELECT value FROM v$parameter WHERE name = 'sessions';`,
+      }),
+      database.query({
+        sql: "SELECT COUNT(*) AS count FROM v$session WHERE status = 'ACTIVE';",
+      }),
+    ]);
+
+    // Extrair os valores dos resultados das consultas
+    const databaseVersionValue = databaseVersionResult.rows[0].BANNER;
+    const databaseMaxConnectionsValue = parseInt(
+      databaseMaxConnectionsResult.rows[0].VALUE,
+    );
+    const databaseOpenedConnectionsValue = parseInt(
+      databaseOpenedConnectionsResult.rows[0].COUNT,
+    );
+
+    // Enviar a resposta JSON
+    response.status(200).json({
+      update_at: updateAt,
+      dependecies: {
+        database: {
+          version: databaseVersionValue,
+          max_connections: databaseMaxConnectionsValue,
+          opened_connections: databaseOpenedConnectionsValue,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Erro ao buscar status do banco de dados:", error);
+    response
+      .status(500)
+      .json({ error: "Erro ao buscar status do banco de dados" });
+  }
 }
 
 export default status;
